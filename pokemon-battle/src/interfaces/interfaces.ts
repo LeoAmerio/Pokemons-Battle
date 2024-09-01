@@ -7,3 +7,9 @@ export interface Pokemon {
   defense: number;
   speed: number;
 }
+
+export interface BattleResult {
+  winner: string;
+  loser: string;
+  battleLog: string[];
+};
