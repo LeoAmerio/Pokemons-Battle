@@ -1,14 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { Pokemon } from './interfaces/interfaces';
-import { Box, Typography, Grid, CardMedia, CardContent, Paper, Button, styled, Card } from '@mui/material';
+import { Box, Typography, Grid, CardMedia, CardContent, Button, styled, Card } from '@mui/material';
 import PokemonCard from './pokemons/PokemonCard';
+import { useQueryClient } from 'react-query';
+import { useBattleMutation, useGetPokemons } from './hooks/useBattle';
+import axios from 'axios';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const fetchPokemons = async (): Promise<Pokemon[]> => {
+  const response = await axios.get<Pokemon[]>('http://localhost:5000/pokemon');
+  return response.data;
+};
+
+interface StyledCardProps {
+  isSelected: boolean;
+  isOpponent: boolean;
+}
+
+const StyledCard = styled(Card, {
+  shouldForwardProp: (prop) => prop !== 'isSelected' && prop !== 'isOpponent',
+})<StyledCardProps>(({ theme, isSelected, isOpponent }) => ({
   cursor: 'pointer',
   '&:hover': {
     boxShadow: theme.shadows[10],
   },
+  border: isSelected
+    ? isOpponent
+      ? '5px solid red'
+      : '5px solid green'
+    : 'none',
 }));
 
 const pokemonData: Pokemon[] = [
@@ -21,29 +41,29 @@ const pokemonData: Pokemon[] = [
 
 function App() {
   const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+  console.log('selectedPokemon ', selectedPokemon);
   const [opponent, setOpponent] = useState<Pokemon | null>(null);
+  console.log('selectedPokemon ', opponent);
+  // const queryClient = useQueryClient();
   // const [battleResult, setBattleResult] = useState<string>('');
+  const { pokemons } = useGetPokemons({ fetchPokemons });	
+  console.log('pokemons ', pokemons);
+  // const { battleMutation } = useBattleMutation({ queryClient });
 
   const handleSelectPokemon = (pokemon: Pokemon) => {
-    setSelectedPokemon(pokemon);
-    const remainingPokemon = pokemonData.filter(p => p.name !== pokemon.name);
-    setOpponent(remainingPokemon[Math.floor(Math.random() * remainingPokemon.length)]);
+    if (selectedPokemon && selectedPokemon.id !== pokemon.id) {
+      setOpponent(pokemon);
+    } else {
+      setSelectedPokemon(pokemon);
+      setOpponent(null);
+    }
   };
 
-  // const startBattle = () => {
+  // useEffect(() => {
   //   if (selectedPokemon && opponent) {
-  //     const playerScore = Object.values(selectedPokemon.stats).reduce((a, b) => a + b, 0);
-  //     const opponentScore = Object.values(opponent.stats).reduce((a, b) => a + b, 0);
-      
-  //     if (playerScore > opponentScore) {
-  //       setBattleResult(`${selectedPokemon.name} wins!`);
-  //     } else if (playerScore < opponentScore) {
-  //       setBattleResult(`${opponent.name} wins!`);
-  //     } else {
-  //       setBattleResult("It's a tie!");
-  //     }
+  //     battleMutation.mutate({ pokemon1Id: selectedPokemon.id, pokemon2Id: opponent.id });
   //   }
-  // };
+  // }, [battleMutation]);
 
   return (
     <Box sx={{ maxWidth: 800, margin: 'auto', padding: 2 }}>
@@ -58,7 +78,11 @@ function App() {
       <Grid container spacing={2} sx={{ marginBottom: 2 }}>
         {pokemonData.map((pokemon) => (
           <Grid item xs={6} sm={4} md={2.4} key={pokemon.name}>
-            <StyledCard onClick={() => handleSelectPokemon(pokemon)}>
+            <StyledCard 
+              onClick={() => handleSelectPokemon(pokemon)}
+              isSelected={pokemon.id === selectedPokemon?.id || pokemon.id === opponent?.id}
+              isOpponent={pokemon.id === opponent?.id}
+            >
               <CardMedia
                 component="img"
                 height="140"
@@ -79,20 +103,20 @@ function App() {
         </Paper>
       )} */}
 
-      {selectedPokemon && opponent && (
+      {(selectedPokemon && opponent) && (
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={5}>
-            <PokemonCard pokemon={selectedPokemon} />
+            <PokemonCard pokemon={selectedPokemon} onClear={() => setSelectedPokemon(null)}/>
           </Grid>
           <Grid item xs={12} md={2}>
             <Box display="flex" justifyContent="center">
-              <Button variant="contained" color="primary">
+              <Button variant="contained" color="primary" >
                 Start Battle
               </Button>
             </Box>
           </Grid>
           <Grid item xs={12} md={5}>
-            <PokemonCard pokemon={opponent} />
+            <PokemonCard pokemon={opponent} onClear={() => setOpponent(null)} />
           </Grid>
         </Grid>
       )}
