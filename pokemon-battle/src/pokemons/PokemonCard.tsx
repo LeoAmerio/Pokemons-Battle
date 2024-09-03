@@ -7,7 +7,6 @@ import {
   LinearProgress,
   Typography,
 } from "@mui/material";
-import React from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { Pokemon } from "../interfaces/interfaces";
 

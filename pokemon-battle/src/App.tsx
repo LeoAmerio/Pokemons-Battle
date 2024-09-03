@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import './App.css'
 import { Pokemon } from './interfaces/interfaces';
 import { Box, Typography, Grid, CardMedia, CardContent, Button, styled, Card } from '@mui/material';
 import PokemonCard from './pokemons/PokemonCard';
-import { useQueryClient } from 'react-query';
-import { useBattleMutation, useGetPokemons } from './hooks/useBattle';
+// import { useQueryClient } from 'react-query';
+import { useGetPokemons } from './hooks/useBattle';
 import axios from 'axios';
 
 const fetchPokemons = async (): Promise<Pokemon[]> => {
